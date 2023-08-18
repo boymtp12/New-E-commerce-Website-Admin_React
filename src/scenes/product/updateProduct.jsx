@@ -155,8 +155,8 @@ const Form = () => {
               >
                 <option value={null}>Chọn loại sản phẩm</option>
                 {categoryOptions.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
+                  <option key={category.id} value={category.name}>
+                    {category.name}
                   </option>
                 ))}
               </TextField>

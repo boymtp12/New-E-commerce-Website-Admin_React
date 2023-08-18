@@ -101,9 +101,9 @@ export default function MenuCategory() {
       >
         {category?.map((item) => {
           return (
-            <MenuItem key={item} onClick={handleClose} disableRipple>
+            <MenuItem key={item.id} onClick={handleClose} disableRipple>
               <FileCopyIcon />
-              {item}
+              {item.name}
             </MenuItem>
           );
         })}
