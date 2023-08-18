@@ -6,6 +6,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import axios from "axios";
 import MenuCategory from "../product/MenuCategory";
+import { toast } from "react-toastify";
 
 const allowedImageFormats = ["image/jpeg", "image/png"];
 
@@ -13,41 +14,38 @@ const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [formData, setFormData] = useState({
+    image: "",
+    name: "",
+    description: "",
+    categoryName: "",
+    price: "",
+    quantityStock: "",
+  });
 
-  const handleFormSubmit = async (values) => {
-    try {
-      const formData = new FormData();
-      formData.append("image", values.image); // Gửi kèm hình ảnh trong FormData
-      formData.append("name", values.name);
-      formData.append("description", values.description);
-      formData.append("categoryName", values.categoryName);
-      formData.append("price", values.price);
-      formData.append("quantityStock", values.quantityStock);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(formData);
+    const options = {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "same-origin", // include, *same-origin, omit2
+      headers: {
+        "Content-Type": "application/json",
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: JSON.stringify(formData), // body data type must match "Content-Type" header
+    };
+    fetch(`http://localhost:8080/product`, options)
+      .then((response) => response.json())
+      .then((rs) => {
+        toast.success("Add product successfull");
+      })
+      .catch((err) => {
+        toast.error("Add product false");
+      });
 
-      console.log(formData);
-
-      const response = await axios.post(
-        "http://localhost:8080/product",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        setSuccessMessage("Thêm mới loại sản phẩm thành công");
-        setErrorMessage(""); // Clear any previous error message
-        // Perform any other actions after successful API call
-      } else {
-        setSuccessMessage("");
-        setErrorMessage("Thêm mới loại sản phẩm thất bại");
-      }
-    } catch (error) {
-      console.error(error);
-      // Handle errors if the API call fails
-    }
   };
 
   const [categoryOptions, setCategoryOptions] = React.useState([]);
@@ -67,7 +65,13 @@ const Form = () => {
 
   return (
     <Box m="20px">
-      <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Header title="SẢN PHẨM" subtitle="Thêm mới sản phẩm" />
 
         <MenuCategory />
@@ -85,178 +89,121 @@ const Form = () => {
 
       <br></br>
 
-      <Formik
-        onSubmit={handleFormSubmit}
-        initialValues={initialValues}
-        validationSchema={productSchema}
-      >
-        {({
-          values,
-          errors,
-          touched,
-          handleBlur,
-          handleChange,
-          handleSubmit,
-          setFieldValue, // Thêm hàm này để set giá trị của trường image
-        }) => (
-          <form onSubmit={handleSubmit}>
-            <Box
-              display="grid"
-              gap="30px"
-              gridTemplateColumns="repeat(4, minmax(0, 1fr))"
-              sx={{
-                "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
-              }}
-            >
-              <TextField
-                fullWidth
-                variant="filled"
-                select
-                label="Loại sản phẩm"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.categoryName}
-                name="categoryName"
-                error={!!touched.categoryName && !!errors.categoryName}
-                helperText={touched.categoryName && errors.categoryName}
-                sx={{ gridColumn: "span 2" }}
-                SelectProps={{
-                  native: true,
-                }}
-              >
-                <option value={null}>Chọn loại sản phẩm</option>
-                {categoryOptions.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </TextField>
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Giá cả"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.price}
-                name="price"
-                error={!!touched.price && !!errors.price}
-                helperText={touched.price && errors.price}
-                sx={{ gridColumn: "span 2" }}
-              />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Tên sản phẩm"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.name}
-                name="name"
-                error={!!touched.name && !!errors.name}
-                helperText={touched.name && errors.name}
-                sx={{ gridColumn: "span 4" }}
-              />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="text"
-                label="Mô tả sản phẩm"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.description}
-                name="description"
-                error={!!touched.description && !!errors.description}
-                helperText={touched.description && errors.description}
-                sx={{ gridColumn: "span 4" }}
-              />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Số lượng tồn kho"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.quantityStock}
-                name="quantityStock"
-                error={!!touched.quantityStock && !!errors.quantityStock}
-                helperText={touched.quantityStock && errors.quantityStock}
-                sx={{ gridColumn: "span 4" }}
-              />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="file"
-                accept=".jpeg, .jpg, .png"
-                label=""
-                onBlur={handleBlur}
-                onChange={(event) => {
-                  const selectedFile = event.currentTarget.files[0];
-                  if (
-                    selectedFile &&
-                    allowedImageFormats.includes(selectedFile.type)
-                  ) {
-                    setFieldValue("image", selectedFile);
-                    setErrorMessage(""); // Reset thông báo lỗi nếu tải lên đúng định dạng
-                  } else {
-                    setFieldValue("image", null);
-                    event.currentTarget.value = "";
-                    setErrorMessage(
-                      "Không đúng định dạng file yêu cầu. Vui lòng tải lên định dạng JPEG hoặc PNG"
-                    );
-                  }
-                }}
-                name="image"
-                error={!!touched.image && !!errors.image}
-                helperText={touched.image && errors.image}
-                sx={{ gridColumn: "span 4" }}
-              />
-              <Typography color="error">{errorMessage}</Typography>{" "}
-              {/* Hiển thị thông báo lỗi */}
-            </Box>
-            <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
-                Tạo mới sản phẩm
-              </Button>
-            </Box>
-          </form>
-        )}
-      </Formik>
+      <form onSubmit={(e) => handleSubmit(e)}>
+        <Box
+          display="grid"
+          gap="30px"
+          gridTemplateColumns="repeat(4, minmax(0, 1fr))"
+          sx={{
+            "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
+          }}
+        >
+          <TextField
+            fullWidth
+            variant="filled"
+            select
+            label="Loại sản phẩm"
+            onChange={(e) =>
+              setFormData({ ...formData, categoryName: e.target.value })
+            }
+            value={formData.categoryName}
+            name="categoryName"
+            sx={{ gridColumn: "span 2" }}
+            SelectProps={{
+              native: true,
+            }}
+          >
+            <option value={null}>Chọn loại sản phẩm</option>
+            {categoryOptions.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
+          </TextField>
+          <TextField
+            fullWidth
+            variant="filled"
+            type="number"
+            label="Giá cả"
+            onChange={(e) =>
+              setFormData({ ...formData, price: e.target.value })
+            }
+            value={formData.price}
+            name="price"
+            sx={{ gridColumn: "span 2" }}
+          />
+          <TextField
+            fullWidth
+            variant="filled"
+            type="text"
+            label="Tên sản phẩm"
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            value={formData.name}
+            name="name"
+            sx={{ gridColumn: "span 4" }}
+          />
+          <TextField
+            fullWidth
+            variant="filled"
+            type="text"
+            label="Mô tả sản phẩm"
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            value={formData.description}
+            name="description"
+            sx={{ gridColumn: "span 4" }}
+          />
+          <TextField
+            fullWidth
+            variant="filled"
+            type="number"
+            label="Số lượng tồn kho"
+            onChange={(e) =>
+              setFormData({ ...formData, quantityStock: e.target.value })
+            }
+            value={formData.quantityStock}
+            name="quantityStock"
+            sx={{ gridColumn: "span 4" }}
+          />
+          <TextField
+            fullWidth
+            variant="filled"
+            type="file"
+            accept=".jpeg, .jpg, .png"
+            label=""
+            onChange={(event) => {
+              const selectedFile = event.currentTarget.files[0];
+              if (
+                selectedFile &&
+                allowedImageFormats.includes(selectedFile.type)
+              ) {
+                setFormData({ ...formData, image: selectedFile });
+                // setFieldValue("image", selectedFile);
+                setErrorMessage(""); // Reset thông báo lỗi nếu tải lên đúng định dạng
+              } else {
+                setFormData({ ...formData, image: null });
+                // setFieldValue("image", null);
+                event.currentTarget.value = "";
+                setErrorMessage(
+                  "Không đúng định dạng file yêu cầu. Vui lòng tải lên định dạng JPEG hoặc PNG"
+                );
+              }
+            }}
+            name="image"
+            sx={{ gridColumn: "span 4" }}
+          />
+          <Typography color="error">{errorMessage}</Typography>{" "}
+          {/* Hiển thị thông báo lỗi */}
+        </Box>
+        <Box display="flex" justifyContent="end" mt="20px">
+          <Button type="submit" color="secondary" variant="contained">
+            Tạo mới sản phẩm
+          </Button>
+        </Box>
+      </form>
     </Box>
   );
-};
-
-const productSchema = yup.object().shape({
-  name: yup.string().required("Không được bỏ trống"),
-  description: yup.string().required("Không được bỏ trống"),
-  image: yup.string().required("Không được bỏ trống"),
-  price: yup
-    .number()
-    .typeError("Giá sản phẩm phải luôn lớn hơn 0")
-    .min(1, "Giá sản phẩm luôn dương")
-    .max(9999999999, "Giá sản phẩm không quá 10 chữ số")
-    .required("Không được bỏ trống"),
-  quantityStock: yup
-    .number()
-    .typeError("Số lượng tồn kho phải là một số")
-    .positive("Số lượng tồn kho phải luôn dương")
-    .integer("Số lượng tồn kho phải là một số nguyên")
-    .required("Không được bỏ trống"),
-  categoryName: yup
-    .string()
-    .nullable()
-    .required("Vui lòng phân loại cho sản phẩm"), // Sử dụng phương thức nullable()
-});
-
-const initialValues = {
-  id: "1",
-  name: "",
-  description: "",
-  image: "",
-  categoryName: "",
-  price: "",
-  quantityStock: "",
-  role: "",
 };
 
 export default Form;
